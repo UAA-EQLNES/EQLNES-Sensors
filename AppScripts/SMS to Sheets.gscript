@@ -1,1 +1,182 @@
-{"url": "https://script.google.com/d/1AvcC0xFO19ajPrEHuHurvkK4juQlrzgt-uSXUUYkEJUNP1Y_pnnP1AME/edit?usp=docslist_api", "resource_id": "script:1AvcC0xFO19ajPrEHuHurvkK4juQlrzgt-uSXUUYkEJUNP1Y_pnnP1AME"}
+// Fetches the list of existing Sheets from the ScriptDb instance.
+//
+// Params:
+// db: ScriptDb instance
+//
+// Returns:
+// A hash table with a Sheet metadata associated with name
+// of the the Sheet.
+function fetchSheetMetaFromDb(db)
+{
+  var data = {};
+  var result = db.query({});
+
+  while (result.hasNext()) {
+    var item = result.next();
+    data[item.name] = item;
+  }
+
+  return data;
+}
+
+
+// Gets the sheet object to add sensor readings to.
+//
+// If a sheet does not exist for the specific sensor (identified
+// by phone number, then a new sheet is created and saved to the ScriptDb
+// instance.
+//
+// Params:
+// sheet_name: The name of the Sheet. Should be unique since sensor is id'd by phone number
+// sheet_meta: Metadata for sheet object. Just name and url right now.
+// db: ScriptDb instance
+//
+// Returns:
+// Sheet object
+//
+// Notes:
+//
+// If the url points to a sheet that does not exist, then the sheet metadata will
+// be deleted from ScriptDb instance.
+//
+// Beware that moving the Sheet to the trash means that the sheet is still valid. The
+// The sheet will need to be removed completely
+//
+// TODO:
+//
+// If a sheet is moved to the trash, it should not be considered an active sheet.
+function getSheetObjectByName(sheet_name, sheet_meta, db)
+{
+  var sheet = undefined;
+
+  if (sheet_meta[sheet_name] !== undefined) {
+    try {
+      sheet = SpreadsheetApp.openByUrl(sheet_meta[sheet_name].url);
+    } catch(e) {
+      db.remove(sheet_meta[sheet_name]);
+      sheet = undefined;
+      sheet_meta[sheet_name] = undefined;
+    }
+  }
+
+  if (sheet === undefined) {
+    sheet = SpreadsheetApp.create(sheet_name);
+    var item = {
+      name: sheet_name,
+      url: sheet.getUrl()
+    };
+    sheet_meta[sheet_name] = db.save(item);
+  }
+
+  return sheet;
+}
+
+// Gets starred messages from Gmail and adds parsed data to Sheet
+//
+// Params:
+// sheet_meta: A hash table with existing sheets
+// db: ScriptDb instance
+//
+// TODO:
+//
+// - Need to keep an eye out for errors due to the automatic line breaks.
+//
+// Notes:
+//
+// - Gmail throttles the script if too many actions are taken (ie, fetch/read/star/unstar msgs)
+//   Should not be a problem at a rate of one email every five hours.
+// - Ideally there should be a way to prevent cases where a message is processed
+//   but not unstarred due to a Gmail error. This would lead to a message being processed twice.
+//   However the probability of that happening is very low so long as you are not processing
+//   greater than 100 messages, in which case Gmail will throttle the script or AppScript max execution
+//   time will be reached.
+function processStarredThreads(sheet_meta, db) {
+
+  var threads = GmailApp.getStarredThreads();
+
+  for (var t in threads) {
+    var thread = threads[t];
+    var subject = thread.getFirstMessageSubject();
+    var msgs = thread.getMessages();
+    var msg_count = thread.getMessageCount();
+
+    var sheet = getSheetObjectByName(subject, sheet_meta, db);
+    var active_sheet = sheet.setActiveSheet(sheet.getSheets()[0]);
+
+    // Loop through thread of messages. Each thread contains messages
+    // from a single sensor up to 100 messages.
+    for (var i = 0; i < msg_count; ++i) {
+
+      // Starred messages have not been processed yet.
+      if (msgs[i].isStarred()) {
+
+        // Get the body text from the email message.
+        var text = msgs[i].getPlainBody();
+
+        // Break the message into separate lines
+        // The emails seem to add an automatic line
+        // break at about 73-75 characters.
+        var lines = text.split("\r\n");
+        var data = "";
+
+        // The data we need will be on 2-3 lines if
+        // we maxed out most of the text message length.
+        //
+        // Hence we need to combine the lines again.
+        for (var j = 0; j < lines.length; ++j) {
+          if (lines[j].length > 0) {
+            data += lines[j];
+          } else {
+            break;
+          }
+        }
+
+        // For some reason a double space is present in the
+        // recombined message data. This extra space occurs exactly
+        // at the line break.
+        //
+        // Here we split the sensor readings into individual
+        // readings of - timestamp distance temperature.
+        data = data.trim().replace("  ", " ").split(';');
+
+        var readings = [];
+        for (var j = 0; j < data.length; ++j) {
+          readings.push(data[j].split(' '));
+        }
+
+        // The first timestamp should be a full unix timestamp.
+        // We will need this to calculate the other timestamps.
+        // The other timestamps consist of minutes after the first
+        // reading in the message.
+        var startTime = parseInt(readings[0][0]);
+
+        sheet.appendRow([startTime, readings[0][1]]);
+        for (var j = 1; j < readings.length; ++j) {
+          sheet.appendRow([
+            startTime + (60 * parseInt(readings[j][0])),
+            readings[j][1],
+            readings[j][2]
+          ]);
+        }
+
+        // Unstar the message now that we've added the reading to the Sheet.
+        msgs[i].unstar();
+      }
+
+      // Every fifteen readings, let's pause for one second.
+      // Not sure if this helps avoid the Gmail throttling though.
+      if (i % 15 == 0) {
+        Utilities.sleep(1000);
+      }
+    }
+  }
+}
+
+// Main program to execute.
+function main_program()
+{
+  var sheet;
+  var db = ScriptDb.getMyDb();
+  var sheet_meta = fetchSheetMetaFromDb(db);
+  processStarredThreads(sheet_meta, db);
+}
