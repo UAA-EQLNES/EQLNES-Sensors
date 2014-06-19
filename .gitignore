@@ -1,0 +1,7 @@
+*.pyc
+.webassets-cache
+min.js
+min.css
+venv
+PcDuino/data
+PcDuino/log

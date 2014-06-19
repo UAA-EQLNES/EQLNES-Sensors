@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=UA Sensors Charts
+GenericName=View data logged from sensors as charts
+Exec=/usr/bin/chromium-browser --start-maximized http://localhost:5000
+Terminal=false
+Categories=Development;Engineering;Electronics;

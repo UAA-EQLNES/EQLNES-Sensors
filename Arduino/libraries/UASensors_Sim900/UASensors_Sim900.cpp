@@ -1,0 +1,137 @@
+#include "UASensors_Sim900.h"
+#include <Arduino.h>
+#include <String.h>
+
+void UASensors_Sim900::begin(Stream *serial)
+{
+    _serial = serial;
+}
+
+void UASensors_Sim900::togglePower()
+{
+  digitalWrite(_powerPin, HIGH);
+  delay(1000);
+  digitalWrite(_powerPin, LOW);
+  delay(1000);
+}
+
+bool UASensors_Sim900::isReady(int timeout)
+{
+    char gsmReady[] = "Call Ready";
+    char gsmReadyLength = 10;
+    int matched = 0;
+    char c;
+    while (timeout > 0)
+    {
+        while (_serial->available())
+        {
+            c = _serial->read();
+            if (c == gsmReady[matched])
+            {
+                matched += 1;
+                if (matched == gsmReadyLength)
+                {
+                    return true;
+                }
+            } else {
+                matched = 0;
+            }
+        }
+        timeout -= 1;
+        delay(100);
+    }
+    return false;
+}
+
+bool UASensors_Sim900::isTextMsgDelivered(int timeout)
+{
+    char smsOK[] = "OK";
+    int smsOKLength = 2;
+    int numOKNeeded = 2;
+
+    char smsError[] = "ERROR";
+    int smsErrorLength = 5;
+
+    char c;
+
+    int matchedError = 0;
+    int matchedOK = 0;
+    int foundOK = 0;
+
+    while (timeout > 0)
+    {
+        while (_serial->available())
+        {
+            c = _serial->read();
+            if (c == smsError[matchedError])
+            {
+                matchedError += 1;
+                matchedOK = 0;
+                if (matchedError == smsErrorLength)
+                {
+                    return false;
+                }
+            }
+            else if (c == smsOK[matchedOK])
+            {
+                matchedOK += 1;
+                matchedError = 0;
+                if (matchedOK == smsOKLength)
+                {
+                    foundOK += 1;
+                }
+
+                if (foundOK == smsOKLength)
+                {
+                    return true;
+                }
+            } else {
+                matchedOK = 0;
+                matchedError = 0;
+            }
+        }
+        timeout -= 1;
+        delay(100);
+    }
+    return false;
+}
+
+void UASensors_Sim900::clearBuffer()
+{
+    char c;
+    while (_serial->available() > 0)
+    {
+        c = _serial->read();
+    }
+}
+
+void UASensors_Sim900::sendTextMsg(String msg, String phoneNumber)
+{
+    _serial->print("AT+CMGF=1\r");
+    delay(500);
+
+    _serial->println("AT + CMGS = \"" + phoneNumber + "\"");
+    delay(500);
+
+    _serial->println(msg);
+    delay(500);
+
+    _serial->println((char)26);
+    delay(500);
+}
+
+int UASensors_Sim900::read()
+{
+    return _serial->read();
+}
+
+int UASensors_Sim900::available()
+{
+    return _serial->available();
+}
+
+void UASensors_Sim900::writeAtCommand(String command)
+{
+    _serial->println(command);
+    delay(100);
+}

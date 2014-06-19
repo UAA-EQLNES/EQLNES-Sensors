@@ -1,0 +1,229 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>UA Sensors Visualization</title>
+
+
+        {% assets "css_all" %}
+        <link rel="stylesheet" href="{{ ASSET_URL }}" type="text/css" />
+        {% endassets %}
+
+        <style type="text/css">
+
+        body {
+            margin: 0;
+        }
+
+        .form-control {
+            color: #000;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .chart-container {
+            box-sizing: border-box;
+            margin: 40px 80px 40px 380px;
+        }
+
+        .chart {
+            width: 100%;
+            height: 400px;
+        }
+
+        .control-container {
+            box-sizing: border-box;
+            height: 100%;
+            overflow:hidden;
+            padding: 40px 20px;
+            width: 300px;
+            position:fixed;
+            left: 0;
+            top: 0;
+        }
+
+        .axisLabels {
+            color: #fff;
+            font-size: 16px;
+            font-family: arial;
+        }
+
+        .flot-tick-label {
+            color: #fff;
+        }
+        </style>
+    </head>
+    <body>
+        <div class="control-container well bs-component">
+            <div class="col">
+                <form id="filter-form" role="form">
+                    <div class="form-group">
+                        <select id="sensor" name="sensor" class="form-control">
+                            {% for id in sensors %}
+                                <option>{{id}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <select id="date-select" class="form-control">
+                            <option value="0">Select Time Period</option>
+                            <option value="1">1 Day</option>
+                            <option value="3">3 Days</option>
+                            <option value="7">1 Week</option>
+                            <option value="14">2 Weeks</option>
+                            <option value="30">1 Month</option>
+                            <option value="custom">Custom Time Period</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <input name="start-date" id="start-date" class="form-control hidden" />
+                    </div>
+
+                    <div class="form-group">
+                        <input name="end-date" id="end-date" class="form-control hidden" />
+                    </div>
+
+                    <div class="form-group">
+                        <button id="update-chart" class="btn btn-primary">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div id="distance-chart" class="chart"></div>
+        </div>
+
+        <div class="chart-container">
+            <div id="temperature-chart" class="chart"></div>
+        </div>
+
+        {% assets "js_all" %}
+        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+        {% endassets %}
+
+        <script type="text/javascript">
+
+        $("#sensor, #date-select").select2({});
+        $('#start-date, #end-date').datepicker({
+            autoclose: true
+        });
+
+        var data = {{data}};
+
+        var sensorSelectEl = document.getElementById('sensor');
+
+        var seriesDistance = data;
+
+        var seriesTemperature = [{
+            label: sensorSelectEl.value,
+            data: data[1],
+        }];
+
+        var plotDistance = $.plot($("#distance-chart"), seriesDistance, {
+            yaxis: {
+                axisLabel: 'Distance in meters',
+                axisLabelPadding: 20,
+            },
+            legend: {
+                backgroundOpacity: 0
+            },
+            xaxis: {
+                mode: "time",
+            },
+            series: {
+                lines: { show: true,  fill: true },
+                points: {
+                    show: false,
+                    fill: false,
+                    fillColor: "#ff8800",
+                },
+                shadowSize: 0
+            },
+            grid: {
+                borderWidth: 2,
+                color: "#ececec",
+                markingsColor: "#f4f4f4",
+                hoverable: true
+            },
+            colors: ["#2a9fd6", "#ff8800", "#cc0000"],
+            tooltip: true,
+            tooltipOpts: {
+                content: "%y meters at %x"
+            }
+        });
+
+        var plotTemperature = $.plot($("#temperature-chart"), seriesTemperature, {
+            yaxis: {
+                axisLabel: 'Temperature in celsius',
+                axisLabelPadding: 20,
+            },
+            legend: {
+                backgroundOpacity: 0
+            },
+            xaxis: {
+                mode: "time",
+            },
+            series: {
+                lines: { show: true,  fill: true },
+                points: {
+                    show: false,
+                    fill: false,
+                    fillColor: "#cc0000",
+                },
+                shadowSize: 0
+            },
+            grid: {
+                borderWidth: 2,
+                color: "#ececec",
+                markingsColor: "#f4f4f4",
+                hoverable: true
+            },
+            colors: ["#cc0000"],
+            tooltip: true,
+            tooltipOpts: {
+                content: "%y celsius at %x"
+            }
+        });
+
+        $('#update-chart').click(function(e) {
+            e.preventDefault();
+            $.getJSON('/api/data', $('#filter-form').serialize(), function(data) {
+                seriesDistance[0].data = data[0];
+                seriesDistance[0].label = sensorSelectEl.value,
+                plotDistance.setData(seriesDistance);
+                plotDistance.setupGrid();
+                plotDistance.draw();
+
+                seriesTemperature[0].data = data[1];
+                seriesTemperature[0].label = sensorSelectEl.value,
+                plotTemperature.setData(seriesTemperature);
+                plotTemperature.setupGrid();
+                plotTemperature.draw();
+            });
+        });
+
+        $startDateEl = $('#start-date');
+        $endDateEl = $('#end-date');
+        $('#date-select').change(function(e) {
+            if (this.value == 'custom') {
+                $startDateEl.val('').removeClass('hidden');
+                $endDateEl.val('').removeClass('hidden');
+            } else if (this.value == '0') {
+                $startDateEl.hide().val('');
+                $endDateEl.hide().val('');
+            } else {
+                var days = parseInt(this.value);
+                var endDate = new Date();
+                var startDate = new Date(endDate.getTime() - (days * 24 * 60 * 60 * 1000));
+                $startDateEl.hide().val(startDate.toJSON().substring(0, 10));
+                $endDateEl.hide().val(endDate.toJSON().substring(0, 10));
+            }
+        });
+
+        </script>
+    </body>
+</html>
