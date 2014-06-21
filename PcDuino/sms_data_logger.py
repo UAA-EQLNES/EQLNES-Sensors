@@ -1,18 +1,15 @@
 #! /usr/bin/env python
 import argparse
-from core import SensorReadingsDataStore, DataParser
 from datetime import datetime
-from gpio import enableUart
 import logging
 from serial import Serial
-from sim900 import Sim900, SMSReader
 from sqlite3 import ProgrammingError
 from time import sleep
 
-
-LOG_FILE = 'log/ua_sensors.log'
-LOG_LEVEL = logging.INFO
-LOG_FORMAT = '%(levelname)s - %(message)s'
+from core import SensorReadingsDataStore, DataParser, MessageFormatError
+from gpio import enableUart
+from sim900 import Sim900, SMSReader
+from utils import get_config, create_logger_from_config
 
 
 def main():
@@ -25,25 +22,23 @@ def main():
     # 4800. An alternative is to increase buffer size in the Arduino SoftwareSerial
     # library.
     parser = argparse.ArgumentParser(description='Run SMS Data Logger.')
-    parser.add_argument('-d', '--db', help='Sqlite3 database file', default='data/ua_sensors.sqlite3')
     parser.add_argument('-p', '--port', help='Serial port', default='/dev/ttyS1')
     parser.add_argument('-b', '--baudrate', type=int, help='Baudrate of Sim900 GSM shield', default=115200)
     args = parser.parse_args()
 
-    db = args.db
     port = args.port
     baudrate = args.baudrate
 
 
+    # Get config file for logging settings and db file path
+    config = get_config()
+
+    # Filepath path to sqlite3 database. Database does not need to exist.
+    # Just make sure folder exists.
+    db = config['SQLITE3_DB_PATH']
+
     # Setup logger
-    logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT)
-
-    logger = logging.getLogger()
-    file_log_handler = logging.FileHandler(LOG_FILE)
-    logger.addHandler(file_log_handler)
-
-    formatter = logging.Formatter(LOG_FORMAT)
-    file_log_handler.setFormatter(formatter)
+    logger = create_logger_from_config(config)
 
 
     # Need to initalize gpio0 and gpio1 to UART mode if pcDuino.
@@ -89,10 +84,10 @@ def main():
                 readings = parser.parse(text_msg.phone_number, text_msg.message)
                 data_logger.store_readings(readings)
                 logger.info("{0} readings logged from sensor {1}.".format(len(readings), readings[0][0]))
-            except ValueError:
-                logger.error("Could not parse text message!")
-            except ProgrammingError:
-                logger.error("Could not save readings to database!")
+            except MessageFormatError as e:
+                logger.error(str(e))
+            except ProgrammingError as e:
+                logger.error(str(e))
 
 
 if __name__ == '__main__':

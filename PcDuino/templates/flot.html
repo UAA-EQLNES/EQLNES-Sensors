@@ -31,7 +31,7 @@
 
         .chart {
             width: 100%;
-            height: 400px;
+            height: 800px;
         }
 
         .control-container {
@@ -94,11 +94,7 @@
         </div>
 
         <div class="chart-container">
-            <div id="distance-chart" class="chart"></div>
-        </div>
-
-        <div class="chart-container">
-            <div id="temperature-chart" class="chart"></div>
+            <div id="sensor-chart" class="chart"></div>
         </div>
 
         {% assets "js_all" %}
@@ -107,27 +103,26 @@
 
         <script type="text/javascript">
 
+        var formatDate = function(dateTime) {
+            date = dateTime.toJSON().substring(0, 10);
+            dateParts = date.split('-');
+            return dateParts[1] + "/" + dateParts[2] + "/" + dateParts[0];
+        };
+
         $("#sensor, #date-select").select2({});
         $('#start-date, #end-date').datepicker({
             autoclose: true
         });
 
-        var data = {{data}};
+        var data = {{data|safe}};
+        var series = [];
+        for (var i = 0; i < data.length; ++i) {
+            series.push(data[i].data);
+        }
 
         var sensorSelectEl = document.getElementById('sensor');
 
-        var seriesDistance = data;
-
-        var seriesTemperature = [{
-            label: sensorSelectEl.value,
-            data: data[1],
-        }];
-
-        var plotDistance = $.plot($("#distance-chart"), seriesDistance, {
-            yaxis: {
-                axisLabel: 'Distance in meters',
-                axisLabelPadding: 20,
-            },
+        var sensorChart = $.plot($("#sensor-chart"), series, {
             legend: {
                 backgroundOpacity: 0
             },
@@ -135,11 +130,10 @@
                 mode: "time",
             },
             series: {
-                lines: { show: true,  fill: true },
+                lines: { show: true,  fill: false },
                 points: {
-                    show: false,
-                    fill: false,
-                    fillColor: "#ff8800",
+                    show: true,
+                    fill: true,
                 },
                 shadowSize: 0
             },
@@ -149,69 +143,32 @@
                 markingsColor: "#f4f4f4",
                 hoverable: true
             },
-            colors: ["#2a9fd6", "#ff8800", "#cc0000"],
+            colors: ["#2a9fd6", "#ff8800", "#cc0000", "#9933cc", "#4e7600"],
             tooltip: true,
             tooltipOpts: {
                 content: "%y meters at %x"
             }
         });
 
-        var plotTemperature = $.plot($("#temperature-chart"), seriesTemperature, {
-            yaxis: {
-                axisLabel: 'Temperature in celsius',
-                axisLabelPadding: 20,
-            },
-            legend: {
-                backgroundOpacity: 0
-            },
-            xaxis: {
-                mode: "time",
-            },
-            series: {
-                lines: { show: true,  fill: true },
-                points: {
-                    show: false,
-                    fill: false,
-                    fillColor: "#cc0000",
-                },
-                shadowSize: 0
-            },
-            grid: {
-                borderWidth: 2,
-                color: "#ececec",
-                markingsColor: "#f4f4f4",
-                hoverable: true
-            },
-            colors: ["#cc0000"],
-            tooltip: true,
-            tooltipOpts: {
-                content: "%y celsius at %x"
-            }
-        });
-
         $('#update-chart').click(function(e) {
             e.preventDefault();
             $.getJSON('/api/data', $('#filter-form').serialize(), function(data) {
-                seriesDistance[0].data = data[0];
-                seriesDistance[0].label = sensorSelectEl.value,
-                plotDistance.setData(seriesDistance);
-                plotDistance.setupGrid();
-                plotDistance.draw();
-
-                seriesTemperature[0].data = data[1];
-                seriesTemperature[0].label = sensorSelectEl.value,
-                plotTemperature.setData(seriesTemperature);
-                plotTemperature.setupGrid();
-                plotTemperature.draw();
+                var updatedSeries = [];
+                for (var i = 0; i < data.length; ++i) {
+                    updatedSeries.push(data[i].data);
+                }
+                sensorChart.setData(updatedSeries);
+                sensorChart.setupGrid();
+                sensorChart.draw();
             });
         });
 
         $startDateEl = $('#start-date');
         $endDateEl = $('#end-date');
-        $('#date-select').change(function(e) {
+        $('#date-select').on("change", function(e) {
             if (this.value == 'custom') {
-                $startDateEl.val('').removeClass('hidden');
-                $endDateEl.val('').removeClass('hidden');
+                $startDateEl.show().removeClass('hidden').val('');
+                $endDateEl.show().removeClass('hidden').val('');
             } else if (this.value == '0') {
                 $startDateEl.hide().val('');
                 $endDateEl.hide().val('');
@@ -219,8 +176,8 @@
                 var days = parseInt(this.value);
                 var endDate = new Date();
                 var startDate = new Date(endDate.getTime() - (days * 24 * 60 * 60 * 1000));
-                $startDateEl.hide().val(startDate.toJSON().substring(0, 10));
-                $endDateEl.hide().val(endDate.toJSON().substring(0, 10));
+                $startDateEl.hide().val(formatDate(startDate));
+                $endDateEl.hide().val(formatDate(endDate));
             }
         });
 

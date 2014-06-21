@@ -5,3 +5,4 @@ min.css
 venv
 PcDuino/data
 PcDuino/log
+PcDuino/settings.cfg

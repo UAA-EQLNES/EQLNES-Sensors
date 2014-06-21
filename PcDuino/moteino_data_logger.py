@@ -1,16 +1,12 @@
 #! /usr/bin/env python
 import argparse
 from datetime import datetime
-import logging
 from serial import Serial
-from core import DataParser, SensorReadingsDataStore
 from sqlite3 import ProgrammingError
 from time import sleep
 
-
-LOG_FILE = 'log/sensor.log'
-LOG_LEVEL = logging.INFO
-LOG_FORMAT = '%(levelname)s - %(message)s'
+from core import DataParser, SensorReadingsDataStore, MessageFormatError
+from utils import get_config, create_logger_from_config
 
 
 def read_all(serial, delay=0.1):
@@ -38,24 +34,22 @@ def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='Run Moteino Data Logger.')
     parser.add_argument('-p', '--port', help='Serial port')
-    parser.add_argument('-d', '--db', help='Sqlite3 database file', default='data/ua_sensors.sqlite3')
     parser.add_argument('-b', '--baudrate', type=int, help='Baudrate of Moteino', default=115200)
     args = parser.parse_args()
 
-    db = args.db
     port = args.port
     baudrate = args.baudrate
 
 
+    # Get config file for logging settings and db file path
+    config = get_config()
+
+    # Filepath path to sqlite3 database. Database does not need to exist.
+    # Just make sure folder exists.
+    db = config['SQLITE3_DB_PATH']
+
     # Setup logger
-    logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT)
-
-    logger = logging.getLogger()
-    file_log_handler = logging.FileHandler(LOG_FILE)
-    logger.addHandler(file_log_handler)
-
-    formatter = logging.Formatter(LOG_FORMAT)
-    file_log_handler.setFormatter(formatter)
+    logger = create_logger_from_config(config)
 
     # Creates a serial connection to Moteino
     serial = Serial(port, baudrate=baudrate, timeout=0)
@@ -91,10 +85,10 @@ def main():
                         raise ValueError
                     readings = parser.parse(parts[0], parts[1])
                     data_logger.store_readings(readings)
-                except ValueError:
-                    logger.error("Could not parse message!")
-                except ProgrammingError:
-                    logger.error("Could not save readings to database!")
+                except MessageFormatError as e:
+                    logger.error(str(e))
+                except ProgrammingError as e:
+                    logger.error(str(e))
         sleep(0.1)
 
 

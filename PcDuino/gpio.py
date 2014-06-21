@@ -1,8 +1,13 @@
 #!/usr/bin/env python
-#
-# io test code for pcDuino ( http://www.pcduino.com )
-#
-__all__ = ['HIGH', 'LOW', 'INPUT', 'OUTPUT','digitalWrite', 'digitalRead', "pinMode"]
+
+"""
+Modified from: https://github.com/pcduino/python-pcduino/blob/master/Samples/blink_led/gpio/__init__.py
+
+Modifications:
+    - Add enableUart function to allow serial connection with PcDuino shield
+"""
+
+__all__ = ['HIGH', 'LOW', 'INPUT', 'OUTPUT', 'IO_UART_FUNC', 'digitalWrite', 'digitalRead', "pinMode"]
 
 _GPIO_PINS = (
     'gpio0','gpio1','gpio2','gpio3','gpio4','gpio5','gpio6','gpio7',
@@ -42,6 +47,7 @@ def digitalRead(channel):
         return f.read(1) == '1'
 
 def enableUart():
+    """Enable Uart mode for for gpio0 and gpio1 for serial connection"""
     with open(_MODE_FD_PATH % 'gpio0', 'w') as f:
         f.write(str(IO_UART_FUNC))
     with open(_MODE_FD_PATH % 'gpio1', 'w') as f:
