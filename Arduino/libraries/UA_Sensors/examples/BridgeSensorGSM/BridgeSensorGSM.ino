@@ -4,7 +4,7 @@
   Sketch used by UA Sensors platform.
 
   Created 14 6 2014
-  Modified 14 6 2014
+  Modified 23 6 2014
 */
 
 #include <LowPower.h>
@@ -53,8 +53,6 @@
 #define UNSENT_FILENAME            "unsent.txt"
 #define ERROR_FILENAME             "error.txt"
 #define PHONE_NUMBER               "+12223334444"
-#define GSM_TIMEOUT                250
-#define SMS_TIMEOUT                100
 #define ERROR_GSM                  "GSM Failed"
 #define ERROR_SMS                  "SMS Failed"
 
@@ -246,14 +244,12 @@ void loop()
     Serial.begin(19200);
     delay(100);
 
-    sim900.togglePower();
-
 
     // 20. Send text message if GSM Ready
-    if (sim900.isReady(GSM_TIMEOUT) == true)
+    if (sim900.ensureReady() == true)
     {
       sim900.sendTextMsg(textMessage, PHONE_NUMBER);
-      if (sim900.isTextMsgDelivered(SMS_TIMEOUT) == false)
+      if (sim900.isTextMsgDelivered() == false)
       {
         // Log SMS failure
         digitalWrite(MOSFET_SD_PIN, HIGH);
@@ -281,7 +277,6 @@ void loop()
       delay(1000);
     }
 
-
     // Reset number of cached readings
     numCachedReadings = 0;
 
@@ -289,8 +284,13 @@ void loop()
     // 20. Turn off GSM.
     // -----------------
 
-    // Turn on GSM power pin.
-    sim900.togglePower();
+    // Turn off GSM power pin.
+    if (sim900.ensureOffline() == false)
+    {
+      // TODO(richard-to): What would be best way to handle this issue?
+      //                   Battery will die quickly if power cannot be turned off.
+      //                   Send SOS SMS?
+    }
 
     // Turn off GSM MOSFET.
     digitalWrite(MOSFET_GSM_PIN, LOW);
