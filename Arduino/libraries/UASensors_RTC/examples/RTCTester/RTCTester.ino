@@ -65,23 +65,23 @@ void loop()
 
 void doShowMenu()
 {
-  Serial.println();
   Serial.println("RTC Tester");
   Serial.println("----------");
   Serial.println("m: Show menu");
   Serial.println("r: Reads current date/time from RTC");
   Serial.println("f: Displays expected date/time format");
   Serial.println("s: Enters mode for setting date/time");
+  Serial.println();
 }
 
 // Shows expected format for setting date/time.
 void doShowDateTimeFormat()
 {
-  Serial.println();
   Serial.println("Date Time Format");
   Serial.println("----------------");
   Serial.println("General format: year-month-day hour:minute:second");
   Serial.println("Example format: 2014-01-12 01:05:23");
+  Serial.println();
 }
 
 // Displays date/time in UNIX timestamp format.
@@ -91,8 +91,8 @@ void doShowDateTimeFormat()
 //
 void doReadDateTime()
 {
-  Serial.println();
   Serial.println("RTC time is: " + rtc.readDateTimeAsText());
+  Serial.println();
 }
 
 // Asks user to input date/time via Serial.
@@ -107,7 +107,6 @@ void doSetDateTime()
   char buffer[25];
   int inputLength = 0;
 
-  Serial.println();
   Serial.println("Enter date time (ex: 2014-01-31 23:05:23):");
 
   // Wait for user to provie date/time via Serial
@@ -125,8 +124,7 @@ void doSetDateTime()
   // assumes that date/time was entered incorrectly.
   if (inputLength != 19)
   {
-    Serial.println();
-    Serial.println("Error: Incorrect date format!");
+    Serial.println("Error: Incorrect date format!\n");
     return;
   }
 
@@ -134,8 +132,7 @@ void doSetDateTime()
   // of date/time values.
   String input = String(buffer);
 
-  Serial.println();
-  Serial.println("Changing time to: " + input);
+  Serial.println("Changing time to: " + input + "...");
 
   int year = input.substring(0, 4).toInt();
   int month = input.substring(5, 7).toInt();
@@ -148,6 +145,7 @@ void doSetDateTime()
   // years since 1970.
   rtc.setDateTime(day, month, year - 1970, hour, minute, second);
 
-  Serial.println();
   Serial.println("RTC time set to: " + rtc.readDateTimeAsText());
+  Serial.println();
+
 }
