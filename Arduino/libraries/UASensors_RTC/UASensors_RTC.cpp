@@ -1,4 +1,4 @@
-// Implementation ased on example code from Sparkfun: https://github.com/sparkfun/DeadOn_RTC
+// Implementation based on example code from Sparkfun: https://github.com/sparkfun/DeadOn_RTC
 
 #include <UASensors_RTC.h>
 #include <Arduino.h>
