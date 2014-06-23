@@ -4,6 +4,7 @@
   Sketch can be used to configure Sim900 shield
 
   Notes:
+  - Make sure shield is manually powered on (ie, red light is on)
   - Notice that the baud rate for the shield connection is 4800. This
     is a workaround for SMS messages greater than 64 characters. Another
     option is to increase the buffer size defined in the Software Serial
@@ -12,7 +13,7 @@
     AT command to use is "AT+IPR=4800"
 
   Created 14 6 2014
-  Modified 14 6 2014
+  Modified 22 6 2014
 */
 #include <SoftwareSerial.h>
 
@@ -28,8 +29,8 @@ const int MAX_BUFFER_SIZE = 100;
 
 void setup()
 {
-  Serial.begin(9600);
-  Sim900.begin(4800);
+  Serial.begin(19200);
+  Sim900.begin(19200);
 
   Serial.println("Sim900 Command Console");
   Serial.println("----------------------");
@@ -52,5 +53,13 @@ void loop()
   buffer[inputLength] = '\0';
 
   Sim900.println(buffer);
-  delay(100);
+
+  // Give some time for GSM shield to process command
+  delay(500);
+
+  // Listen for input from GSM shield.
+  while (Sim900.available())
+  {
+    Serial.write(Sim900.read());
+  }
 }
