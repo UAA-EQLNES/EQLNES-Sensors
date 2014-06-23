@@ -8,7 +8,7 @@
   - Date/time is UTC timezone
 
   Created 14 6 2014
-  Modified 14 6 2014
+  Modified 22 6 2014
 */
 #include <UASensors_RTC.h>
 
@@ -24,6 +24,7 @@ UASensors_RTC rtc(CS_PIN);
 
 
 // Menu options recognized from Serial input
+const char SHOW_MENU = 'm';
 const char READ_DATETIME = 'r';
 const char SET_DATETIME = 's';
 const char SHOW_FORMAT = 'f';
@@ -33,11 +34,8 @@ void setup()
 {
   Serial.begin(9600);
 
-  Serial.println("RTC Tester");
-  Serial.println("----------");
-  Serial.println("r: Reads current date/time from RTC");
-  Serial.println("f: Displays expected date/time format");
-  Serial.println("s: Enters mode for setting date/time");
+  // Show menu
+  doShowMenu();
 
   // Call begin to initialize RTC
   rtc.begin();
@@ -49,6 +47,9 @@ void loop()
   {
     switch (Serial.read())
     {
+      case SHOW_MENU:
+        doShowMenu();
+        break;
       case SHOW_FORMAT:
         doShowDateTimeFormat();
         break;
@@ -62,9 +63,21 @@ void loop()
   }
 }
 
+void doShowMenu()
+{
+  Serial.println();
+  Serial.println("RTC Tester");
+  Serial.println("----------");
+  Serial.println("m: Show menu");
+  Serial.println("r: Reads current date/time from RTC");
+  Serial.println("f: Displays expected date/time format");
+  Serial.println("s: Enters mode for setting date/time");
+}
+
 // Shows expected format for setting date/time.
 void doShowDateTimeFormat()
 {
+  Serial.println();
   Serial.println("Date Time Format");
   Serial.println("----------------");
   Serial.println("General format: year-month-day hour:minute:second");
@@ -78,7 +91,8 @@ void doShowDateTimeFormat()
 //
 void doReadDateTime()
 {
-  Serial.println(rtc.readDateTime());
+  Serial.println();
+  Serial.println("RTC time is: " + rtc.readDateTimeAsText());
 }
 
 // Asks user to input date/time via Serial.
@@ -93,6 +107,7 @@ void doSetDateTime()
   char buffer[25];
   int inputLength = 0;
 
+  Serial.println();
   Serial.println("Enter date time (ex: 2014-01-31 23:05:23):");
 
   // Wait for user to provie date/time via Serial
@@ -110,6 +125,7 @@ void doSetDateTime()
   // assumes that date/time was entered incorrectly.
   if (inputLength != 19)
   {
+    Serial.println();
     Serial.println("Error: Incorrect date format!");
     return;
   }
@@ -117,6 +133,9 @@ void doSetDateTime()
   // Convert buffer to String to simplify extraction
   // of date/time values.
   String input = String(buffer);
+
+  Serial.println();
+  Serial.println("Changing time to: " + input);
 
   int year = input.substring(0, 4).toInt();
   int month = input.substring(5, 7).toInt();
@@ -128,4 +147,7 @@ void doSetDateTime()
   // Set date/time from user input. Time library expects year as number
   // years since 1970.
   rtc.setDateTime(day, month, year - 1970, hour, minute, second);
+
+  Serial.println();
+  Serial.println("RTC time set to: " + rtc.readDateTimeAsText());
 }

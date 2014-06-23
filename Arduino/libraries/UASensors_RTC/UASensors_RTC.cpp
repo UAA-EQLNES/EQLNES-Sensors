@@ -1,3 +1,5 @@
+// Implementation ased on example code from Sparkfun: https://github.com/sparkfun/DeadOn_RTC
+
 #include <UASensors_RTC.h>
 #include <Arduino.h>
 #include <SPI.h>
@@ -49,6 +51,13 @@ void UASensors_RTC::setDateTime(int day, int month, int year, int hours, int min
         SPI.transfer(timedate[i]);
         digitalWrite(_csPin, HIGH);
     }
+}
+
+String UASensors_RTC::readDateTimeAsText()
+{
+    time_t timestamp = readDateTime();
+    return String(year(timestamp)) + "-" + String(month(timestamp)) + "-" + String(day(timestamp)) + " " +
+        String(hour(timestamp)) + ":" + String(minute(timestamp)) + ":" + String(second(timestamp));
 }
 
 time_t UASensors_RTC::readDateTime()
