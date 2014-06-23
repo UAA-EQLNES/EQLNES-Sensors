@@ -16,6 +16,39 @@ void UASensors_Sim900::togglePower()
   delay(1000);
 }
 
+bool UASensors_Sim900::ensureReady()
+{
+    return _ensurePowerStatus(POWER_READY, MAX_POWER_RETRIES);
+}
+
+bool UASensors_Sim900::ensureOffline()
+{
+    return _ensurePowerStatus(POWER_OFFLINE, MAX_POWER_RETRIES);
+}
+
+bool UASensors_Sim900::_ensurePowerStatus(int status, int maxRetries)
+{
+    bool success = false;
+    int retries = 0;
+
+    while (retries < maxRetries && success == false)
+    {
+        togglePower();
+        waitPowerToggleCompleted();
+
+        if (_powerStatus == status)
+        {
+            success = true;
+        }
+        else
+        {
+            retries += 1;
+        }
+        delay(300);
+    }
+    return success;
+}
+
 bool UASensors_Sim900::isReady()
 {
     return _powerStatus == POWER_READY;

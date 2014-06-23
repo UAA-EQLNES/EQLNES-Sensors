@@ -36,10 +36,12 @@ SoftwareSerial Sim900Serial(7, 8);
 
 
 // Menu options recognized from Serial input
-const char SHOW_MENU =     'm';
-const char POWER_STATUS =  'i';
 const char SEND_TEXT_MSG = 's';
+const char POWER_STATUS =  'i';
+const char SHOW_MENU =     'm';
 const char TOGGLE_POWER =  'p';
+const char POWER_READY =   'r';
+const char POWER_OFFLINE = 'o';
 
 
 void setup()
@@ -72,6 +74,12 @@ void loop()
       case TOGGLE_POWER:
         doTogglePower();
         break;
+      case POWER_READY:
+        doPowerReady();
+        break;
+      case POWER_OFFLINE:
+        doPowerOffline());
+        break;
       case SEND_TEXT_MSG:
         doSendTextMsg();
         break;
@@ -93,9 +101,14 @@ void doShowMenu()
   Serial.println("i: Check power status");
   Serial.println("s: Send text message");
   Serial.println("p: Toggle power on shield");
+  Serial.println("r: Set shield to ready state (powered on)");
+  Serial.println("o: Set shield to offline state");
   Serial.println();
 }
 
+// Check the power state stored in software. This is not
+// the real hardware power state unfortunately, just a best
+// guess based on status message from the GSM.
 void doShowPowerStatus()
 {
   Serial.print("GSM power status is...");
@@ -113,6 +126,9 @@ void doShowPowerStatus()
   }
 }
 
+// Not recommended to use this functionality since
+// power state is toggled and in most cases we need
+// the exact state.
 void doTogglePower()
 {
   Serial.println("Toggling power on GSM shield...");
@@ -130,15 +146,42 @@ void doTogglePower()
   }
   else if (sim900.isUnknownState())
   {
-    Serial.println("Error: GSM shield state unknown. Possible reasons:");
-    Serial.println("- Shield has no power source (check for green light)");
-    Serial.println("- If using power from Arduino, make sure set to xduino");
-    Serial.println("- Incorrect baudrates for serial console or shield");
-    Serial.println("- Invalid sim card");
-    Serial.println("- Timeout value too low");
+    showErrorMessageForPower();
   }
 }
 
+// Tests functionality that ensures that the GSM is powered on
+// We want to make sure the GSM is on and ready so we can
+// send sensor readings via SMS.
+void doPowerReady()
+{
+  Serial.println("Ensuring GSM shield is in READY state...");
+
+  if (sim900.ensureReady())
+  {
+    Serial.println("GSM shield powered on and ready.");
+  }
+  else
+  {
+    showErrorMessageForPower();
+  }
+}
+
+// Tests functionality that ensures that the GSM is powered off
+// This is important to know otherwise battery could drain quickly.
+void doPowerOffline()
+{
+  Serial.println("Ensuring GSM shield is in OFFLINE state...");
+
+  if (sim900.ensureOffline())
+  {
+    Serial.println("GSM shield powered down successfully.");
+  }
+  else
+  {
+    showErrorMessageForPower();
+  }
+}
 
 void doSendTextMsg()
 {
@@ -149,7 +192,6 @@ void doSendTextMsg()
     Serial.println("Error: Can't send text message if powered off!\n");
     return;
   }
-
 
   Serial.println("Sending a test message via SMS...\n");
 
@@ -166,4 +208,15 @@ void doSendTextMsg()
   {
     Serial.println("Error: Could not send text message!\n");
   }
+}
+
+// General troubleshooting error message
+void showErrorMessageForPower()
+{
+    Serial.println("Error: GSM shield state unknown. Possible reasons:");
+    Serial.println("- Shield has no power source (check for green light)");
+    Serial.println("- If using power from Arduino, make sure set to xduino");
+    Serial.println("- Incorrect baudrates for serial console or shield");
+    Serial.println("- Invalid sim card");
+    Serial.println("- Timeout value too low");
 }
