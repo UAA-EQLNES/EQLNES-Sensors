@@ -4,8 +4,11 @@ HOST = '127.0.0.1'
 PORT = 5000
 TEMPLATE = 'flot.html'
 
+SITE_TITLE = "UA Sensors Visualization"
+
 # Database location
 SQLITE3_DB_PATH = 'data/ua_sensors.sqlite3'
+
 
 # Sensor type mapping
 #
@@ -20,6 +23,24 @@ SENSOR_TYPES = (
     ("g", "Gate", "distance meters"),
     ("s", "Soil", "moisture percent; temperature celsius"),
 )
+
+
+# Maps sensor ids to more informative name.
+#
+# Not all sensors need to be named. Can be adjusted later, just remember to
+# restart server on config file updates
+#
+# For instance, +12223334444 is not as informative as Campbell Creek Water Sensor
+#
+# Example format:
+#
+# SENSOR_NAMES = {
+#   '+12223334444': 'Yosemite Distance Sensor',
+#   '+01234567890': 'Siberia Gate Sensor',
+#   'moteino_1': 'Arctic Ocean Moisture Sensor',
+# }
+SENSOR_NAMES = {}
+
 
 # Data logger error logging
 DATA_LOGGER_ERROR_FILE = 'log/ua_sensor.log'
