@@ -5,42 +5,88 @@
 void UASensors_Sim900::begin(Stream *serial)
 {
     _serial = serial;
+    _powerStatus = POWER_OFFLINE;
 }
 
 void UASensors_Sim900::togglePower()
 {
-  digitalWrite(_powerPin, HIGH);
+  digitalWrite(POWER_PIN, HIGH);
   delay(1000);
-  digitalWrite(_powerPin, LOW);
+  digitalWrite(POWER_PIN, LOW);
   delay(1000);
 }
 
-bool UASensors_Sim900::isReady(int timeout)
+bool UASensors_Sim900::isReady()
+{
+    return _powerStatus == POWER_READY;
+}
+
+bool UASensors_Sim900::isOffline()
+{
+    return  _powerStatus == POWER_OFFLINE;
+}
+
+bool UASensors_Sim900::isUnknownState()
+{
+    return  _powerStatus == POWER_UNKNOWN;
+}
+
+void UASensors_Sim900::waitPowerToggleCompleted()
+{
+    waitPowerToggleCompleted(DEFAULT_POWER_TIMEOUT);
+}
+
+void UASensors_Sim900::waitPowerToggleCompleted(int timeout)
 {
     char gsmReady[] = "Call Ready";
     char gsmReadyLength = 10;
-    int matched = 0;
+
+    char gsmOffline[] = "NORMAL POWER DOWN";
+    char gsmOfflineLength = 17;
+
+    int matchedOffline = 0;
+    int matchedReady = 0;
+
     char c;
+
     while (timeout > 0)
     {
         while (_serial->available())
         {
             c = _serial->read();
-            if (c == gsmReady[matched])
+            if (c == gsmOffline[matchedOffline])
             {
-                matched += 1;
-                if (matched == gsmReadyLength)
+                matchedOffline += 1;
+                matchedReady = 0;
+                if (matchedOffline == gsmOfflineLength)
                 {
-                    return true;
+                    _powerStatus = POWER_OFFLINE;
+                    return;
+                }
+            }
+            else if (c == gsmReady[matchedReady])
+            {
+                matchedReady += 1;
+                matchedOffline = 0;
+                if (matchedReady == gsmReadyLength)
+                {
+                    _powerStatus = POWER_READY;
+                    return;
                 }
             } else {
-                matched = 0;
+                matchedOffline = 0;
+                matchedReady = 0;
             }
         }
         timeout -= 1;
         delay(100);
     }
-    return false;
+    _powerStatus = POWER_UNKNOWN;
+}
+
+bool UASensors_Sim900::isTextMsgDelivered()
+{
+    return isTextMsgDelivered(DEFAULT_SMS_TIMEOUT);
 }
 
 bool UASensors_Sim900::isTextMsgDelivered(int timeout)

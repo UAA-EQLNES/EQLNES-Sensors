@@ -6,18 +6,30 @@
 
 class UASensors_Sim900 {
 public:
+    static const int POWER_PIN = 9;
+    static const int DEFAULT_POWER_TIMEOUT = 250;
+    static const int DEFAULT_SMS_TIMEOUT = 100;
+    static const int POWER_OFFLINE = 0;
+    static const int POWER_READY = 1;
+    static const int POWER_UNKNOWN = 2;
+
     void begin(Stream *serial);
     void togglePower();
-    bool isReady(int timeout);
+    bool isReady();
+    bool isOffline();
+    bool isUnknownState();
+    void waitPowerToggleCompleted();
+    void waitPowerToggleCompleted(int timeout);
     void clearBuffer();
     void sendTextMsg(String msg, String phoneNumber);
+    bool isTextMsgDelivered();
     bool isTextMsgDelivered(int timeout);
     void writeAtCommand(String command);
     int read();
     int available();
 private:
     Stream *_serial;
-    int _powerPin;
+    int _powerStatus;
 };
 
 #endif
