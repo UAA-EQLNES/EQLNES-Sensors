@@ -78,7 +78,7 @@ void loop()
         doPowerReady();
         break;
       case POWER_OFFLINE:
-        doPowerOffline());
+        doPowerOffline();
         break;
       case SEND_TEXT_MSG:
         doSendTextMsg();
