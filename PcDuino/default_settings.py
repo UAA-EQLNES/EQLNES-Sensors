@@ -1,13 +1,13 @@
 # Web server
-DEBUG = True
+DEBUG = False
 HOST = '127.0.0.1'
 PORT = 5000
 TEMPLATE = 'flot.html'
 
-SITE_TITLE = "UA Sensors Visualization"
+SITE_TITLE = "UA Sensors Visualization Demo"
 
 # Database location
-SQLITE3_DB_PATH = 'data/ua_sensors.sqlite3'
+SQLITE3_DB_PATH = 'data/ua_sensors_demo.sqlite3'
 
 
 # Sensor type mapping
@@ -34,15 +34,15 @@ SENSOR_TYPES = (
 #
 # Example format:
 #
-# SENSOR_NAMES = {
-#   '+12223334444': 'Yosemite Distance Sensor',
-#   '+01234567890': 'Siberia Gate Sensor',
-#   'moteino_1': 'Arctic Ocean Moisture Sensor',
-# }
-SENSOR_NAMES = {}
+SENSOR_NAMES = {
+    'sensor_0': 'Machu Picchu Sensor',
+    'sensor_1': 'Yellowstone Sensor',
+    'sensor_2': 'Sagarmatha National Park Sensor',
+    'sensor_3': 'Banff Sensor',
+}
 
 
 # Data logger error logging
-DATA_LOGGER_ERROR_FILE = 'log/ua_sensor.log'
+DATA_LOGGER_ERROR_FILE = 'log/ua_sensors_demo.log'
 DATA_LOGGER_ERROR_LEVEL = 'INFO'
 DATA_LOGGER_ERROR_FORMAT = '%(levelname)s - %(message)s'

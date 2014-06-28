@@ -23,7 +23,7 @@ def main():
     """
 
     parser = argparse.ArgumentParser(description='Import CSV data into sensor readings database')
-    parser.add_argument('-d', '--db', help='Sqlite3 database file', default='data/ua_sensors_test.sqlite3')
+    parser.add_argument('-d', '--db', help='Sqlite3 database file', default='data/ua_sensors_demo.sqlite3')
     parser.add_argument('-c', '--csv', help='CSV Filename', default='dummy_data.csv')
     args = parser.parse_args()
 
