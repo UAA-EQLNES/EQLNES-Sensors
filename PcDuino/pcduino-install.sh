@@ -30,8 +30,5 @@ sudo cp $INSTALL_FOLDER/$SERVER_SERVICE.conf /etc/init/$SERVER_SERVICE.conf
 # Create desktop menu item
 sudo cp $INSTALL_FOLDER/$CHART_DESKTOP_CONF /usr/share/applications/$CHART_DESKTOP_CONF
 
-# Start logger service
-sudo start $LOG_SERVICE
-
 # Start server service
 sudo start $SERVER_SERVICE
