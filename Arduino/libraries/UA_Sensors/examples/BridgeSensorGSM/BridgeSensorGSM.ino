@@ -3,8 +3,13 @@
 
   Sketch used by UA Sensors platform.
 
+  Notes:
+  - Sketch handles specific case with current test sensor
+    where SD Card does not write
+  - Need to test if this version works on test sensor
+
   Created 14 6 2014
-  Modified 23 6 2014
+  Modified 30 6 2014
 */
 
 #include <LowPower.h>
@@ -30,11 +35,9 @@
 
 
 // Digital Pins
-#define MOSFET_RTC_PIN   3
-#define MOSFET_SD_PIN    4
 #define MOSFET_US_PIN    5
 #define MOSFET_GSM_PIN   6
-#define MOSFET_THERM_PIN 7
+#define THERM_PIN        7
 #define RTC_CS_PIN       8
 #define GSM_PWRKEY       9
 #define SD_CS_PIN        10
@@ -66,6 +69,7 @@ typedef struct {
 
 
 // Global Variables
+boolean isFirstReading = true;
 int numCachedReadings = 0;
 SensorReading sensorReadings[SEND_DATA_AFTER_X_READINGS];
 UASensors_Sim900 sim900;
@@ -76,7 +80,7 @@ UASensors_SDCard sd(SD_CS_PIN);
 void setup()
 {
   pinMode(SD_CS_PIN, OUTPUT);
-  pinMode(MOSFET_THERM_PIN, OUTPUT);
+  pinMode(THERM_PIN, OUTPUT);
   sim900.begin(&Serial);
 }
 
@@ -95,9 +99,25 @@ void loop()
   }
 
 
+  // Hack to handle strange behavior where SD card receives no
+  // power.
+  if (isFirstReading)
+  {
+    // Turn on GSM MOSFET.
+    digitalWrite(MOSFET_GSM_PIN, HIGH);
+    delay(2000);
+
+    // Turn off GSM MOSFET.
+    digitalWrite(MOSFET_GSM_PIN, LOW);
+    delay(1000);
+
+    isFirstReading = false;
+  }
+
+
   // 2. Turn on thermistor.
   // ----------------------
-  digitalWrite(MOSFET_THERM_PIN, HIGH);
+  digitalWrite(THERM_PIN, HIGH);
 
   // 3. Take 5 thermistor readings. (one every 20ms)
   // -----------------------------------------------
@@ -110,7 +130,7 @@ void loop()
 
   // 4. Turn off thermistor.
   // -----------------------
-  digitalWrite(MOSFET_THERM_PIN, LOW);
+  digitalWrite(THERM_PIN, LOW);
   delay(500);
 
   // 5. Average 5 thermistor readings.
@@ -175,14 +195,8 @@ void loop()
 
   // 12. Get time from RTC Shield.
   // -----------------------------
-  digitalWrite(MOSFET_RTC_PIN, HIGH);
-  delay(500);
-
   rtc.begin();
   time_t unixTime = rtc.readDateTime();
-
-  digitalWrite(MOSFET_RTC_PIN, LOW);
-  delay(500);
 
 
   // 13. Combine time, distance, and temperature into a single string.
@@ -200,17 +214,10 @@ void loop()
   // 15. Save data string to text file on SD card: "1399506809 1000 100" (roughly 20 characters)
   // -------------------------------------------------------------------------------------------
 
-  //Turn on SD MOSFET.
-  digitalWrite(MOSFET_SD_PIN, HIGH);
-
   // Try to turn on SD card. Should only need to be called once.
   sd.begin();
   sd.writeFile(BACKUP_FILENAME, dataString);
   delay(1000);
-
-  // Turn off SD MOSFET.
-  digitalWrite(MOSFET_SD_PIN, LOW);
-  delay(500);
 
 
   // 16. Are there 4 unsent data strings?
@@ -251,30 +258,16 @@ void loop()
       sim900.sendTextMsg(textMessage, PHONE_NUMBER);
       if (sim900.isTextMsgDelivered() == false)
       {
-        // Log SMS failure
-        digitalWrite(MOSFET_SD_PIN, HIGH);
-        delay(1000);
-
         sd.begin();
         sd.writeFile(ERROR_FILENAME, String(unixTime) + ": " + ERROR_SMS);
         sd.writeFile(UNSENT_FILENAME, textMessage);
-
-        digitalWrite(MOSFET_SD_PIN, LOW);
-        delay(1000);
       }
     }
     else
     {
-      // Log GSM failure
-      digitalWrite(MOSFET_SD_PIN, HIGH);
-      delay(1000);
-
       sd.begin();
       sd.writeFile(ERROR_FILENAME, String(unixTime) + ": " + ERROR_GSM);
       sd.writeFile(UNSENT_FILENAME, textMessage);
-
-      digitalWrite(MOSFET_SD_PIN, LOW);
-      delay(1000);
     }
 
     // Reset number of cached readings
