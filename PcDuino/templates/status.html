@@ -17,7 +17,7 @@
                     <table class="table table-striped">
                         <tbody>
                             {% for line in log %}
-                            <tr><td>{{ line }}</td></tr>
+                            <tr class="text-{{line[0]}}"><td>{{ line[1] }}</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>

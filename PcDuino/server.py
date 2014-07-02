@@ -91,9 +91,20 @@ def show_status():
         fsize = f.tell()
         f.seek (max (fsize-5120, 0), 0)
         lines = f.readlines()
-    log = [line.strip() for line in lines if len(line.strip()) > 0]
-    log = ''.join(log).split('INFO - ')
-    return render_template('status.html', site_title=app.config['SITE_TITLE'], log=log[1:])
+    log_lines = [line.strip() for line in lines if len(line.strip()) > 0]
+    log = []
+    current_line = None
+    for line in log_lines:
+        if line.startswith('INFO') or line.startswith('ERROR'):
+            if current_line is not None:
+                if current_line.startswith('ERROR'):
+                    log.append(('danger', current_line))
+                else:
+                    log.append(('default', current_line))
+            current_line = line
+        elif current_line is not None:
+            current_line += line
+    return render_template('status.html', site_title=app.config['SITE_TITLE'], log=log)
 
 
 # Endpoint to retrieve data in JSON format
