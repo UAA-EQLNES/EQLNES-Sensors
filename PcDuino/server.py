@@ -84,6 +84,17 @@ def root():
         end_date=end_date,
         data=json_data,)
 
+@app.route('/status')
+def show_status():
+    with open(app.config['DATA_LOGGER_ERROR_FILE'], 'r') as f:
+        f.seek (0, 2)
+        fsize = f.tell()
+        f.seek (max (fsize-5120, 0), 0)
+        lines = f.readlines()
+    log = [line.strip() for line in lines if len(line.strip()) > 0]
+    log = ''.join(log).split('INFO - ')
+    return render_template('status.html', site_title=app.config['SITE_TITLE'], log=log[1:])
+
 
 # Endpoint to retrieve data in JSON format
 @app.route('/api/data', methods=['GET'])
