@@ -9,7 +9,7 @@
   - Need to test if this version works on test sensor
 
   Created 14 6 2014
-  Modified 30 6 2014
+  Modified 1 7 2014
 */
 
 #include <LowPower.h>
@@ -96,6 +96,12 @@ void loop()
   {
     LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
   }
+
+
+  // HACK: Turn on GSM MOSFET on wake up each time. Somehow
+  //       fixes bug where RocketScream resets.
+  digitalWrite(MOSFET_GSM_PIN, HIGH);
+  delay(1000);
 
 
   // 2. Turn on thermistor.
@@ -223,13 +229,6 @@ void loop()
     }
 
 
-    // 19. Turn on GSM Shied.
-    // ---------------------
-
-    //Turn on GSM MOSFET.
-    digitalWrite(MOSFET_GSM_PIN, HIGH);
-    delay(1000);
-
     // GSM baud rate. Start communication link with GSM shield.
     Serial.begin(19200);
     delay(100);
@@ -267,9 +266,9 @@ void loop()
       //                   Battery will die quickly if power cannot be turned off.
       //                   Send SOS SMS?
     }
-
-    // Turn off GSM MOSFET.
-    digitalWrite(MOSFET_GSM_PIN, LOW);
-    delay(1000);
   }
+
+  // Turn off GSM MOSFET.
+  digitalWrite(MOSFET_GSM_PIN, LOW);
+  delay(1000);
 }
