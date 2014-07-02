@@ -65,7 +65,7 @@ assets.register('css_all', css_assets)
 
 # Initialize class to query database
 db = SensorReadingsDataStore(app.config['SQLITE3_DB_PATH'])
-
+db.setup()
 
 # Main home page
 @app.route('/')
