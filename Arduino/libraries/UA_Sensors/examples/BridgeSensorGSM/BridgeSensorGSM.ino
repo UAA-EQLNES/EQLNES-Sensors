@@ -99,22 +99,6 @@ void loop()
   }
 
 
-  // Hack to handle strange behavior where SD card receives no
-  // power.
-  if (isFirstReading)
-  {
-    // Turn on GSM MOSFET.
-    digitalWrite(MOSFET_GSM_PIN, HIGH);
-    delay(2000);
-
-    // Turn off GSM MOSFET.
-    digitalWrite(MOSFET_GSM_PIN, LOW);
-    delay(1000);
-
-    isFirstReading = false;
-  }
-
-
   // 2. Turn on thermistor.
   // ----------------------
   digitalWrite(THERM_PIN, HIGH);
