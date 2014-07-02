@@ -3,13 +3,8 @@
 
   Sketch used by UA Sensors platform.
 
-  Notes:
-  - Sketch handles specific case with current test sensor
-    where SD Card does not write
-  - Need to test if this version works on test sensor
-
   Created 14 6 2014
-  Modified 1 7 2014
+  Modified 2 7 2014
 */
 
 #include <LowPower.h>
@@ -45,6 +40,7 @@
 
 // Settings
 // -------------------------------
+#define SENSOR_TYPE                "d"
 #define SEND_DATA_AFTER_X_READINGS 4
 #define SLEEP_CYCLES               4
 #define NUM_THERM_READINGS         5
@@ -70,6 +66,7 @@ typedef struct {
 
 // Global Variables
 int numCachedReadings = 0;
+int totalReadings = 0;
 SensorReading sensorReadings[SEND_DATA_AFTER_X_READINGS];
 UASensors_Sim900 sim900;
 UASensors_RTC rtc(RTC_CS_PIN);
@@ -190,7 +187,11 @@ void loop()
 
   // 13. Combine time, distance, and temperature into a single string.
   // -----------------------------------------------------------------
-  String dataString = String(unixTime) + " " + String(roundedDistance) + " " + String(roundedTemperature);
+  totalReadings += 1;
+  String dataString = String(totalReadings) + " " +
+    String(unixTime) + " " +
+    String(roundedDistance) + " " +
+    String(roundedTemperature);
 
   // Cache distance and time in global array variable
   sensorReadings[numCachedReadings].distance = roundedDistance;
@@ -217,7 +218,11 @@ void loop()
 
     // 18. Prepare text message
     // ---------------------
-    String textMessage = String(sensorReadings[0].timestamp) + " " + String(sensorReadings[0].distance) + " " + String(sensorReadings[0].temperature);
+    String textMessage = String(SENSOR_TYPE) + " " +
+      String(sensorReadings[0].timestamp) + " " +
+      String(sensorReadings[0].distance) + " " +
+      String(sensorReadings[0].temperature);
+
     time_t startTime = sensorReadings[0].timestamp;
     int minutesElapsed = 0;
 
@@ -259,7 +264,6 @@ void loop()
     // 20. Turn off GSM.
     // -----------------
 
-    // Turn off GSM power pin.
     if (sim900.ensureOffline() == false)
     {
       // TODO(richard-to): What would be best way to handle this issue?
@@ -270,5 +274,5 @@ void loop()
 
   // Turn off GSM MOSFET.
   digitalWrite(MOSFET_GSM_PIN, LOW);
-  delay(1000);
+  delay(2000);
 }
