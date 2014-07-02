@@ -69,7 +69,6 @@ typedef struct {
 
 
 // Global Variables
-boolean isFirstReading = true;
 int numCachedReadings = 0;
 SensorReading sensorReadings[SEND_DATA_AFTER_X_READINGS];
 UASensors_Sim900 sim900;
