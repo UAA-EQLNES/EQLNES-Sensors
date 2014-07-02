@@ -11,7 +11,7 @@
   needs to be run from the battery.
 
   Created 1 7 2014
-  Modified 1 7 2014
+  Modified 2 7 2014
 */
 
 #include <LowPower.h>
@@ -21,7 +21,7 @@
 
 // LED blink settings
 const byte LED = 13;
-const int BLINK_DELAY = 5;
+const int BLINK_DELAY = 200;
 
 // GSM shield settings
 const byte MOSFET_GSM_PIN = 6;
@@ -97,4 +97,5 @@ void blink(byte pin, int delay_ms)
   digitalWrite(pin, HIGH);
   delay(delay_ms);
   digitalWrite(pin, LOW);
+  delay(delay_ms);
 }

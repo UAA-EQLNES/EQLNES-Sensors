@@ -15,14 +15,14 @@
   The thermistor readings are taken from analog pin **5**.
 
   Created 1 7 2014
-  Modified 1 7 2014
+  Modified 2 7 2014
 */
 
 #include <LowPower.h>
 
 // LED blink settings
 const byte LED = 13;
-const int BLINK_DELAY = 5;
+const int BLINK_DELAY = 200;
 
 // Thermistor settings
 const byte THEMISTOR_PIN = A5;
@@ -73,4 +73,5 @@ void blink(byte pin, int delay_ms)
   digitalWrite(pin, HIGH);
   delay(delay_ms);
   digitalWrite(pin, LOW);
+  delay(delay_ms);
 }
