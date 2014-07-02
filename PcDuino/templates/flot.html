@@ -74,7 +74,7 @@
                             <option value="0">Select Time Period</option>
                             <option value="1">1 Day</option>
                             <option value="3">3 Days</option>
-                            <option value="7">1 Week</option>
+                            <option value="7" selected="selected">1 Week</option>
                             <option value="14">2 Weeks</option>
                             <option value="30">1 Month</option>
                             <option value="custom">Custom Time Period</option>
@@ -84,6 +84,7 @@
                     <div class="form-group">
                         <input id="start-date"
                             name="start-date"
+                            value="{{start_date}}"
                             class="form-control"
                             style="display:none"
                             placeholder="Start date" />
@@ -92,13 +93,23 @@
                     <div class="form-group">
                         <input id="end-date"
                             name="end-date"
+                            value="{{end_date}}"
                             class="form-control"
                             style="display:none"
                             placeholder="End date" />
                     </div>
 
                     <div class="form-group">
-                        <button id="update-chart" class="btn btn-success">Refresh data</button>
+                        <label style="color:#ddd; font-weight: normal">
+                            <input id="auto-fresh-checkbox" type="checkbox">
+                            Refresh every {{refresh_interval}} minutes
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <button id="update-chart" class="btn btn-success" data-loading-text="Loading...">
+                            Refresh data
+                        </button>
                     </div>
                     </fieldset>
                 </form>
@@ -260,12 +271,26 @@
         sensorChart.setData(data).drawLegend().enableResize().plot();
 
 
+        // Refresh every 20 minutes. Need to use millis.
+        var refreshInterval = {{refresh_interval}} * 60 * 1000;
+        setInterval(function() {
+            if ($('#auto-fresh-checkbox').prop('checked')) {
+                $('#update-chart').click();
+            }
+        }, refreshInterval);
+
+
         // Update chart when "Refresh data" button clicked
         $('#update-chart').click(function(e) {
             e.preventDefault();
+
+            var btn = $(this);
+            btn.button('loading');
+
             $.getJSON('/api/data', $('#filter-form').serialize(), function(data) {
                 sensorChart.setData(data).drawLegend().plot();
                 $("#chart-title").text($("#sensor").select2('data').text);
+                btn.button('reset');
             });
         });
 

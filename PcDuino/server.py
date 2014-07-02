@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import json
 import sqlite3
 
@@ -16,6 +17,11 @@ def build_sensors_options(sensors, sensor_names):
             sensor_names.get(sensor_id, sensor_id)))
     return tuple(sensor_options)
 
+
+def calculate_date_range(days=7, format="%m/%d/%Y"):
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=days)
+    return (start_date.strftime("%m/%d/%Y"), end_date.strftime("%m/%d/%Y"))
 
 # Create web server and load settings
 app = Flask(__name__, static_url_path='')
@@ -38,6 +44,7 @@ js_assets = Bundle(
     'vendor/js/jquery.flot.tooltip.js',
     'vendor/js/jquery.flot.downsample.js',
     'vendor/js/select2.js',
+    'vendor/js/bootstrap-button.js',
     'vendor/js/bootstrap-datepicker.js',
     filters='rjsmin',
     output='js/min.js')
@@ -65,13 +72,17 @@ db = SensorReadingsDataStore(app.config['SQLITE3_DB_PATH'])
 def root():
     sensors = db.fetch_sensors()
     sensor_options = build_sensors_options(sensors, app.config.get('SENSOR_NAMES', {}))
-    data = db.fetch(sensors[0])
+    start_date, end_date = calculate_date_range()
+    data = db.fetch(sensors[0], start_date, end_date)
     json_data = json.dumps(data)
     return render_template(
         app.config['TEMPLATE'],
         site_title=app.config['SITE_TITLE'],
+        refresh_interval=app.config['REFRESH_INTERVAL'],
         sensor_options=sensor_options,
-        data=json_data)
+        start_date=start_date,
+        end_date=end_date,
+        data=json_data,)
 
 
 # Endpoint to retrieve data in JSON format
