@@ -4,13 +4,13 @@
   This sketch specifically tests the DeadOn RTC - DS3234 Breakout board
   used on our sensor platform.
 
-  This sketch will write a value of n + 1 to the file test.txt when
+  This sketch will write a value of n + 1 to the file test.txt each time
   the RocketScream wakes up.
 
   You should detach the RTC breakout board and GSM Shield.
 
   Created 1 7 2014
-  Modified 1 7 2014
+  Modified 2 7 2014
 */
 
 #include <LowPower.h>
@@ -20,10 +20,6 @@
 // UASensors SDCard Dependency
 #include <SdFat.h>
 
-
-// LED blink settings
-const byte LED = 13;
-const int BLINK_DELAY = 5;
 
 // SD card settings
 const byte SD_CS_PIN = 10;
@@ -51,14 +47,4 @@ void loop()
   sd.begin();
   sd.writeFile(TEST_FILENAME, String(wakeupCount));
   delay(1000);
-}
-
-
-// Simple blink function
-void blink(byte pin, int delay_ms)
-{
-  pinMode(pin, OUTPUT);
-  digitalWrite(pin, HIGH);
-  delay(delay_ms);
-  digitalWrite(pin, LOW);
 }
