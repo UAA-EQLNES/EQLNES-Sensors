@@ -253,7 +253,7 @@ class SensorReadingsDataStore(object):
         query = "SELECT DISTINCT {0} FROM {1}".format(self.table.COL_SENSOR_ID, self.table.NAME)
         data = []
         for row in self._execute_query(query):
-            data.append(row[0])
+            data.append(str(row[0]))
         self.sensors = data
 
         return tuple(data)
