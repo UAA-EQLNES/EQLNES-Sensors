@@ -9,7 +9,7 @@ from time import sleep
 from core import SensorReadingsDataStore, DataParser, MessageFormatError
 from gpio import enableUart
 from sim900 import Sim900, SMSReader
-from utils import get_config, create_logger_from_config
+from utils import get_config, create_logger_from_config, parse_sensor_types_config
 
 
 def main():
@@ -55,7 +55,7 @@ def main():
     reader = SMSReader(sim900)
 
     # Parses brige sensor message into usable data.
-    parser = DataParser()
+    parser = DataParser(parse_sensor_types_config(config['SENSOR_TYPES']))
 
     # Logs data into Sqlite3 db
     data_logger = SensorReadingsDataStore(db)

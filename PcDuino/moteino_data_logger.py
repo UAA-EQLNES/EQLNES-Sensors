@@ -6,7 +6,7 @@ from sqlite3 import ProgrammingError
 from time import sleep
 
 from core import DataParser, SensorReadingsDataStore, MessageFormatError
-from utils import get_config, create_logger_from_config
+from utils import get_config, create_logger_from_config, parse_sensor_types_config
 
 
 def read_all(serial, delay=0.1):
@@ -55,7 +55,7 @@ def main():
     serial = Serial(port, baudrate=baudrate, timeout=0)
 
     # Parses brige sensor message into usable data.
-    parser = DataParser()
+    parser = DataParser(parse_sensor_types_config(config['SENSOR_TYPES']))
 
     # Logs data into Sqlite3 db
     data_logger = SensorReadingsDataStore(db)
