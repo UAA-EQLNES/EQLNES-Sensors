@@ -8,9 +8,6 @@ SERVER_SERVICE=ua-sensors-server
 
 # Download dependencies
 sudo apt-get update
-sudo apt-get install ssh
-sudo apt-get install vim
-sudo apt-get install git-core
 sudo apt-get install sqlite3
 sudo apt-get install python-pip
 
