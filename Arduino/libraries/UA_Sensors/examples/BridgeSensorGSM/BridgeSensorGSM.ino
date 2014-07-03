@@ -40,8 +40,9 @@
 
 // Settings
 // -------------------------------
+#define SENSOR_TO_RIVER_BED        2000
 #define SENSOR_TYPE                "d"
-#define SEND_DATA_AFTER_X_READINGS 4
+#define SEND_DATA_AFTER_X_READINGS 10
 #define SLEEP_CYCLES               4
 #define NUM_THERM_READINGS         5
 #define THERM_READING_DELAY        20
@@ -93,13 +94,6 @@ void loop()
   {
     LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
   }
-
-
-  // HACK: Turn on GSM MOSFET on wake up each time. Somehow
-  //       fixes bug where RocketScream resets.
-  digitalWrite(MOSFET_GSM_PIN, HIGH);
-  delay(1000);
-
 
   // 2. Turn on thermistor.
   // ----------------------
@@ -173,7 +167,7 @@ void loop()
 
   // 11. Use average temperature to calculate actual distance.
   // ---------------------------------------------------------
-  double adjustedDistance = ( ( 331.1 + .6 * avgTemperature ) / 344.5 ) * avgDistance;
+  double adjustedDistance = SENSOR_TO_RIVER_BED - ( ( 331.1 + .6 * avgTemperature ) / 344.5 ) * avgDistance;
 
   int roundedDistance = round(adjustedDistance);
   int roundedTemperature = round(avgTemperature);
@@ -233,6 +227,10 @@ void loop()
       textMessage += String(DATA_DELIM) + String(minutesElapsed) + " " + String(sensorReadings[i].distance) + " " + String(sensorReadings[i].temperature);
     }
 
+    // Turn on MOSFET GSM
+    digitalWrite(MOSFET_GSM_PIN, HIGH);
+    delay(1500);
+
 
     // GSM baud rate. Start communication link with GSM shield.
     Serial.begin(19200);
@@ -270,9 +268,9 @@ void loop()
       //                   Battery will die quickly if power cannot be turned off.
       //                   Send SOS SMS?
     }
-  }
 
-  // Turn off GSM MOSFET.
-  digitalWrite(MOSFET_GSM_PIN, LOW);
-  delay(2000);
+    // Turn off GSM MOSFET.
+    digitalWrite(MOSFET_GSM_PIN, LOW);
+    delay(2000);
+  }
 }
