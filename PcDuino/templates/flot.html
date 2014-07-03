@@ -271,7 +271,7 @@
         sensorChart.setData(data).drawLegend().enableResize().plot();
 
 
-        // Refresh every 20 minutes. Need to use millis.
+        // Refresh every X minutes. Need to use millis.
         var refreshInterval = {{refresh_interval}} * 60 * 1000;
         setInterval(function() {
             if ($('#auto-fresh-checkbox').prop('checked')) {

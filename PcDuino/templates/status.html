@@ -14,15 +14,25 @@
             <div class="row">
                 <div class="col col-md-8 col-md-offset-2">
                     <h2>SMS Data Log</h2>
-                    <table class="table table-striped">
-                        <tbody>
-                            {% for line in log %}
-                            <tr class="text-{{line[0]}}"><td>{{ line[1] }}</td></tr>
-                            {% endfor %}
-                        </tbody>
+                    <table id="log-table" class="table table-striped">
+                        {% include 'log_table.html' %}
                     </table>
                 </div>
             </div>
         </div>
+
+        {% assets "js_log" %}
+        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+        {% endassets %}
+
+        <script>
+        // Refresh every X minutes. Need to use millis.
+        var refreshInterval = 1 * 60 * 1000;
+        setInterval(function() {
+            $.get('/api/status', function(html) {
+                $('#log-table').html(html);
+            }, 'html');
+        }, refreshInterval);
+        </script>
     </body>
 </html>
