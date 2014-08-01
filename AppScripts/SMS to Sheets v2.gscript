@@ -1,13 +1,13 @@
 // Gmail uses the following format for sender field "SMS from (222) 333-4444"
 //
-// The GSM shield receives numbers in this format: "+12223334444", so
+// The GSM shield receives numbers in this format: "+16505033896", so
 // we need to reformat.
 //
 // We could also get the phone number from the email sender information.
 function formatSensorIdFromSubject(subject)
 {
   var length = subject.length;
-  var sensor_id = "+1";
+  var sensor_id = "+1";  
   for (var i = 0; i < length; ++i)
   {
     if (isNaN(subject[i]) === false && subject[i] != " ") {
@@ -23,8 +23,8 @@ function formatSensorIdFromSubject(subject)
 // Params:
 // sheet: Google Spreadsheet object
 //
-// TODO:
-//
+// TODO: 
+// 
 // - There is a bug where the international phone number gets read as a number in Sheets...
 //
 // Notes:
@@ -36,97 +36,98 @@ function formatSensorIdFromSubject(subject)
 //   However the probability of that happening is very low so long as you are not processing
 //   greater than 100 messages, in which case Gmail will throttle the script or AppScript max execution
 //   time will be reached.
-function processStarredThreads(sheet)
+function processStarredThreads(sheet) 
 {
   var threads = GmailApp.getStarredThreads();
-
-  for (var t in threads)
-  {
+ 
+  for (var t in threads) 
+  {   
     var thread = threads[t];
     var subject = thread.getFirstMessageSubject();
     var msgs = thread.getMessages();
     var msg_count = thread.getMessageCount();
-
+  
     var active_sheet = sheet.setActiveSheet(sheet.getSheets()[0]);
-
+    
     // Only process messages from Google Voice
-    if (subject.indexOf('SMS from') === 0 && msg_count > 0)
+    if (subject.indexOf('SMS from') === 0 && msg_count > 0) 
     {
-
+      
       var sensor_id = formatSensorIdFromSubject(subject);
-
+      
       // Loop through thread of messages. Each thread contains messages
       // from a single sensor up to 100 messages.
       for (var i = 0; i < msg_count; ++i) {
-
+        
         // Starred messages have not been processed yet
         if (msgs[i].isStarred()) {
 
           // Get the body text from the email message.
           var text = msgs[i].getPlainBody();
-
+          
           // Break the message into separate lines
           // The emails seem to add an automatic line
           // break at about 73-75 characters.
           var lines = text.split("\r\n");
           var data = "";
-
-          // The data we need will be on 2-3 lines if
+          
+          // The data we need will be on 2-3 lines if 
           // we maxed out most of the text message length.
           //
           // Hence we need to combine the lines again.
-          for (var j = 0; j < lines.length; ++j)
+          for (var j = 0; j < lines.length; ++j) 
           {
-            if (lines[j].length > 0)
+            if (lines[j].length > 0) 
             {
               data += lines[j];
-            } else
+            } else 
             {
               break;
             }
           }
-
-          // For some reason a double space is present in the
+          
+          // For some reason a double space is present in the 
           // recombined message data. This extra space occurs exactly
           // at the line break.
           //
           // Here we split the sensor readings into individual
           // readings of - timestamp distance temperature.
           data = data.trim().replace("  ", " ").split(';');
-
+          
           var readings = [];
-          for (var j = 0; j < data.length; ++j)
+          for (var j = 0; j < data.length; ++j) 
           {
             readings.push(data[j].split(' '));
           }
-
+          
           // The first timestamp should be a full unix timestamp.
           // We will need this to calculate the other timestamps.
           // The other timestamps consist of minutes after the first
           // reading in the message.
-          var startTime = parseInt(readings[0][0]);
-
-          sheet.appendRow([sensor_id, startTime, readings[0][1], readings[0][2]]);
-          for (var j = 1; j < readings.length; ++j)
+          var sensor_type = readings[0][0];          
+          var start_time = parseInt(readings[0][1]);
+          sheet.appendRow([sensor_id, sensor_type, start_time, readings[0][2], readings[0][3]]);
+          for (var j = 1; j < readings.length; ++j) 
           {
             sheet.appendRow([
               sensor_id,
-              startTime + (60 * parseInt(readings[j][0])),
+              sensor_type,
+              start_time + (60 * parseInt(readings[j][0])),
               readings[j][1],
               readings[j][2]
             ]);
           }
-
+          
           // Unstar the message now that we've added the reading to the Sheet.
           msgs[i].unstar();
         }
-
+        
         // Every fifteen readings, let's pause for one second.
         // Not sure if this helps avoid the Gmail throttling though.
-        if (i % 15 == 0)
+        if (i % 15 == 0) 
         {
           Utilities.sleep(1000);
-        }
+        }      
       }
     }
   }
@@ -137,11 +138,11 @@ function main_program()
 {
   var script_properties = PropertiesService.getScriptProperties();
   var user_properties = PropertiesService.getUserProperties();
-
+  
   var sheet_url = user_properties.getProperty('SHEET_URL');
   var sheet = null;
-
-  try
+  
+  try 
   {
     sheet = SpreadsheetApp.openByUrl(sheet_url);
   }
