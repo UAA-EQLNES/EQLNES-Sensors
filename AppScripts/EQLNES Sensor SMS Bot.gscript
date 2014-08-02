@@ -2,7 +2,7 @@
  * Helper methods for storing sensor readings in
  * Google Spreadsheets data source.
  */
-var UA_SheetsSource = {
+var EQLNES_SheetsSource = {
   /**
    * Creates a function to store data in a Google Spreadsheet
    *
@@ -25,7 +25,7 @@ var UA_SheetsSource = {
  * Helper methods for storing sensor readings in
  * Google Fusion Tables data source.
  */
-var UA_FusionTableSource = {
+var EQLNES_FusionTableSource = {
   SCHEMA: [
     ["SensorID", "STRING"],
     ["Timestamp", "NUMBER"],
@@ -254,11 +254,11 @@ function main_processWithFusionTables()
   }
   catch(e)
   {
-    table = UA_FusionTableSource.create(script_properties.getProperty('DEFAULT_NAME'));
+    table = EQLNES_FusionTableSource.create(script_properties.getProperty('DEFAULT_NAME'));
     user_properties.setProperty('TABLE_ID', table.tableId);
   }
 
-  var insertRow = UA_FusionTableSource.newInsertRowAdapter(table);
+  var insertRow = EQLNES_FusionTableSource.newInsertRowAdapter(table);
 
   processStarredThreads(insertRow);
 }
@@ -285,6 +285,6 @@ function main_processWithSheets()
     user_properties.setProperty('SHEET_URL', sheet.getUrl());
   }
 
-  var insertRow = UA_SheetsSource.newInsertRowAdapter(sheet);
+  var insertRow = EQLNES_SheetsSource.newInsertRowAdapter(sheet);
   processStarredThreads(insertRow);
 }

@@ -130,7 +130,7 @@ function processStarredThreads(insertRow)
   }
 }
 
-var UA_FusionTableSource = {
+var EQLNES_FusionTableSource = {
   SCHEMA: [
     ["Sensor ID", "STRING"],
     ["Timestamp", "NUMBE"],
@@ -201,11 +201,11 @@ function main_program()
   }
   catch(e)
   {
-    table = UA_FusionTableSource.create(script_properties.getProperty('DEFAULT_NAME'));
+    table = EQLNES_FusionTableSource.create(script_properties.getProperty('DEFAULT_NAME'));
     user_properties.setProperty('TABLE_ID', table.tableId);
   }
 
-  var insertRow = UA_FusionTableSource.newInsertRowAdapter(table);
+  var insertRow = EQLNES_FusionTableSource.newInsertRowAdapter(table);
 
   processStarredThreads(insertRow);
 }
