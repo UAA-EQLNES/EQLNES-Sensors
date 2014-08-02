@@ -13,7 +13,7 @@
 // Moisture sensor settings
 const byte MOISTURE_PIN = A6;
 const int NUM_MOISTURE_READINGS = 5;
-const int MOISTURE_MAX_READING = 600;
+const int MOISTURE_MAX_READING = 930;
 
 
 void setup()
