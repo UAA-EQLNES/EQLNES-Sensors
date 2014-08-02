@@ -46,7 +46,7 @@ axed by Google. Another limitation may be data storage limits.
 ### 1.4 EQLNES Sensor SMS Bot.gscript.gscript
 
 This script demonstrates how different storage backends can be swapped in and
-out. Examples include Google Spreadsheets and Fusion tables. Another example
+out. Examples include Google Spreadsheets and Fusion tables. Future examples
 could be Twitter or a remote MySQL database.
 
 ## 2. Installation instructions
