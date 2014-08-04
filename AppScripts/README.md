@@ -47,7 +47,7 @@ Note that you will need to enable the "experimental libraries" to use Google
 Fusion tables with AppScripts. In addition, the Fusion tables API will need
 to be enabled.
 
-### 1.4 EQLNES Sensor SMS Bot.gscript.gscript
+### 1.4 EQLNES Sensor SMS Bot.gscript
 
 This script demonstrates how different storage backends can be swapped in and
 out. Examples include Google Spreadsheets and Fusion tables. Future examples
